@@ -15,6 +15,7 @@ const Home = () => {
     // Format the message for WhatsApp
     const whatsappMessage = `Name: ${formData.name}%0A` +
       `Location: ${formData.location}%0A` +
+      `Phone: ${formData.phone}%0A` +
       `Message: ${formData.message}`;
 
     // Create WhatsApp URL with the message
