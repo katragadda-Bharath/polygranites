@@ -1,33 +1,46 @@
 import React, { useState } from 'react';
 import './Designs.css';
+import { FaDownload } from 'react-icons/fa';
 
-// Import all images from the Designs folder
+// Import all images and PDFs from the Designs folder
 const importAll = (r) => {
   return r.keys().map((key) => ({
-    key, // Original file path (e.g., './image1.png')
-    url: r(key), // Resolved URL for the file
+    key,
+    url: r(key),
   }));
 };
 
 const Portfolio = () => {
   const [selectedMedia, setSelectedMedia] = useState(null);
 
-  // Get all images from the Designs folder
-  const mediaItems = importAll(require.context('../Designs', false, /\.(png|jpe?g|svg|gif|webp)$/))
+  // Get all media files from the Designs folder
+  const mediaItems = importAll(require.context('../Designs', false, /\.(png|jpe?g|svg|gif|webp|pdf)$/))
     .map(({ key, url }, index) => {
-      // Extract filename from the key (e.g., './image1.png' -> 'image1')
       const filename = key.replace('./', '').replace(/\.[^/.]+$/, '');
+      const fileExtension = key.split('.').pop().toLowerCase();
+      const isPDF = fileExtension === 'pdf';
 
       return {
         id: index + 1,
-        type: 'image',
+        type: isPDF ? 'pdf' : 'image',
         url: url,
-        title: filename
+        title: filename,
+        extension: fileExtension
       };
     });
 
   const handleMediaClick = (item) => {
-    setSelectedMedia(item);
+    if (item.type === 'pdf') {
+      // Create a temporary link element and trigger download
+      const link = document.createElement('a');
+      link.href = item.url;
+      link.download = `${item.title}.${item.extension}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      setSelectedMedia(item);
+    }
   };
 
   const closeModal = () => {
@@ -40,15 +53,26 @@ const Portfolio = () => {
       <div className="portfolio-grid">
         {mediaItems.map((item) => (
           <div key={item.id} className="portfolio-item" onClick={() => handleMediaClick(item)}>
-            <img src={item.url} alt={item.title} className="portfolio-media" />
-            <div className="portfolio-overlay">
-              <h3>{item.title}</h3>
-            </div>
+            {item.type === 'pdf' ? (
+              <div className="pdf-button">
+                <button className="download-button">
+                  {item.title}
+                  <FaDownload className="download-icon" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <img src={item.url} alt={item.title} className="portfolio-media" />
+                <div className="portfolio-overlay">
+                  <h3>{item.title}</h3>
+                </div>
+              </>
+            )}
           </div>
         ))}
       </div>
 
-      {selectedMedia && (
+      {selectedMedia && selectedMedia.type === 'image' && (
         <div className="modal" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="close-button" onClick={closeModal}>×</button>
